@@ -34,23 +34,49 @@ describe "Authentication" do
       describe "followed by signout" do
         before { click_link "Sign out" }
         it { should have_link('Sign in') }
+        it { should_not have_link('Profile', href: user_path(user)) }
+        it { should_not have_link('Settings', href: edit_user_path(user)) }
       end
     end
   end
 
   describe "authorization" do
+    describe "for signed-in users" do
+      let(:user) { FactoryGirl.create(:user) }
+      before { sign_in user } 
+      
+      describe "accessing users#new" do
+        before { get signup_path }
+        specify { response.should redirect_to(root_path) }
+      end
+
+      describe "accessing users#create" do
+        before { post users_path }
+        specify { response.should redirect_to(root_path) }
+      end
+    end
+
+    describe "admin users" do
+      let(:admin) { FactoryGirl.create(:admin) }
+      before { sign_in admin } 
+
+      it "should not be able to delete themselves" do
+        expect { delete user_path(admin) }.not_to change(User, :count).by(-1)
+      end
+
+    end
 
     describe "for non-signed-in users" do
-      let(:user) { FactoryGirl.create(:user) }
-
       describe "in the Users controller" do
 
         describe "visiting the edit page" do
+          let(:user) { FactoryGirl.create(:user) }
           before { visit edit_user_path(user) }
           it { should have_selector('title', text: 'Sign in') }
         end
 
         describe "submitting to the update action" do
+          let(:user) { FactoryGirl.create(:user) }
           before { put user_path(user) }
           specify { response.should redirect_to(signin_path) }
         end
@@ -62,6 +88,7 @@ describe "Authentication" do
       end
 
       describe "when attempting to visit a protected page" do
+        let(:user) { FactoryGirl.create(:user) }
         before do
           visit edit_user_path(user)
           fill_in "Email",    with: user.email
