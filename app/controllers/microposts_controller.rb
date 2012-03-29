@@ -15,7 +15,6 @@ class MicropostsController < ApplicationController
 
   def destroy
     @micropost.destroy
-    puts user_path(@micropost.user)
     redirect_to user_path(@micropost.user)
   end
   
