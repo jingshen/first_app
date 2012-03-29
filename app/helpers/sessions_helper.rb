@@ -33,6 +33,11 @@ module SessionsHelper
     session[:return_to] = request.fullpath
   end
 
+  def signed_in_user
+    store_location
+    redirect_to signin_path, notice: "Please sign in." unless signed_in?
+  end
+
   private
 
     def user_from_remember_token
